@@ -1,1 +1,191 @@
-# DOORS
+--[[>Version 0.0.1<]]
+--// Service & Data \\
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Data = ReplicatedStorage:WaitForChild("GameData")
+local Floor = GameData:WaitForChild("Floor")
+--// Check Floor & Mode \\
+
+local Fools = Floor.Value == "Fools"
+
+local Hotel_Update = Floor.Value == "Hotel"
+
+local Rooms = Floor.Value == "Rooms"
+
+local Mines = Floor.Value == "Mines"
+
+local Retro = Floor.Value == "Retro"
+
+local Backdoor = Floor.Value == "Backdoor"
+
+local Hotel = game.PlaceId == 110258689672367
+--// Check RemotesFolder \\
+if game.PlaceId == 110258689672367 then
+RemotesFolder = ReplicatedStorage.Bricks
+else
+RemotesFolder = ReplicatedStorage.RemotesFolder
+end
+--// Create A Library \\
+local repo = "https://raw.githubusercontent.com/mstudio45/LinoriaLib/main/"
+local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
+local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
+local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
+--// Setting Library \\
+local Options = Library.Options
+
+local Toggles = Library.Toggles
+
+Library.ForceCheckbox = false
+
+Library.ShowToggleFrameInKeybinds = true
+
+Library.NotifySide = "Right"
+--// Create A Window \\
+local Window = Library:CreateWindow({
+	Title = "YOUHUB | DOORS 👁️ | Thank you so much user : " .. game.Players.LocalPlayer.Name,
+	NotifySide = "Right",
+	Center = true,
+  AutoShow = true,
+  TabPadding = 8,
+  MenuFadeTime = 0
+})
+--// Create Tabs \\
+local Tabs = {
+  Main = Window:AddTab("Main"),
+  Players = Window:AddTab("Players"),
+  Exploits = Window:AddTab("Exploits"),
+  Visual = Window:AddTab("Visual"),
+  Settings = Window:AddTab("Configs"),
+}
+--// Script \\
+local Fast = Tabs.Main:AddLeftGroupbox("Fast")
+game:GetService("RunService").RenderStepped:Connect(function()
+pcall(function()
+if _G.FastDoors then game.workspace.CurrentRooms[tostring(game:GetService("ReplicatedStorage").GameData.LatestRoom.Value)]:WaitForChild("Door"):SetAttribute("FastOpen", true)
+end 
+end)
+end)
+Fast:AddToggle("DoorsFast",{
+Text = "Doors Fast",
+Default = false,
+Callback = function(v)
+_G.FastDoors = v
+end})
+local Reach = Tabs.Main:AddRightGroupbox("Reach")
+game:GetService("RunService").RenderStepped:Connect(function()
+pcall(function()
+if _G.DoorsReach then game.workspace.CurrentRooms[tostring(game:GetService("ReplicatedStorage").GameData.LatestRoom.Value)]:WaitForChild("Door").ClientOpen:FireServer()
+end 
+end)
+end)
+Reach:AddToggle("DoorsReach",{
+Text = "Doors Reach",
+Default = false,
+Callback = function(v)
+_G.DoorsReach = v
+end})
+Reach:AddToggle("Reach",{
+Text = "Reach",
+Default = false,
+Callback = function(v)
+if v then
+for _,v in pairs(workspace:GetDescendants()) do
+if v:IsA("ProximityPrompt") then
+v.MaxActivationDistance = 15
+end
+end
+IncreasedDistance = workspace.DescendantAdded:Connect(function(v)
+if v:IsA("ProximityPrompt") then
+v.MaxActivationDistance = 15
+end
+end)
+else
+IncreasedDistance:Disconnect()
+for _,v in pairs(workspace:GetDescendants()) do
+if v:IsA("ProximityPrompt") then
+v.MaxActivationDistance = 8
+end
+end
+end
+end})
+local Interact = Tabs.Main:AddLeftGroupbox("Interact")
+Interact:AddToggle("ThroughInteract",{
+Text = "Through Interact",
+Default = false,
+Callback = function(v)
+if v then
+for _,v in pairs(workspace:GetDescendants()) do
+if v:IsA("ProximityPrompt") then
+v.RequiresLineOfSight = false
+end
+end
+ThroughInteract = workspace.DescendantAdded:Connect(function(v)
+if v:IsA("ProximityPrompt") then
+v.RequiresLineOfSight = false
+end
+end)
+else
+ThroughInteract:Disconnect()
+for _,v in pairs(workspace:GetDescendants()) do
+if v:IsA("ProximityPrompt") then
+v.RequiresLineOfSight = true
+end
+end
+end
+end})
+Interact:AddToggle("InstanceInteract",{
+Text = "Instance Interact",
+Default = false,
+Callback = function(v)
+if v then
+for _,v in pairs(workspace:GetDescendants()) do
+if v:IsA("ProximityPrompt") then
+v.HoldDuration = 0
+end
+end
+InstanceInteract = workspace.DescendantAdded:Connect(function(v)
+if v:IsA("ProximityPrompt") then
+v.HoldDuration = 0
+end
+end)
+else
+InstanceInteract:Disconnect()
+end
+end})
+Interact:AddToggle("InstanceInteract",{
+Text = "Auto Interact",
+Default = false,
+Callback = function(v)
+if v then
+AutoInteract = game:GetService("RunService").RenderStepped:Connect(function()
+if not game.Players.LocalPlayer.Character or not game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+local ClosestPrompt, ClosestDist = nil, math.huge
+for _, prompt in ipairs(workspace.CurrentRooms:GetDescendants()) do
+if prompt:IsA("ProximityPrompt") and not string.find(prompt.Name, "Hide") then
+if prompt.Parent and prompt.Parent:IsA("BasePart") then
+local Distance = (prompt.Parent.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+if Distance < ClosestDist then
+ClosestDist = Distance
+ClosestPrompt = prompt
+end
+end
+end
+end
+if ClosestPrompt then
+pcall(function()
+fireproximityprompt(ClosestPrompt)
+end)
+end
+end)
+else
+if AutoInteract then
+AutoInteract:Disconnect()
+AutoInteract = nil
+end
+end
+end}):AddKeyPicker("AutoInteractKeybind", {
+   Default = "R",
+   Text = "Auto Interact",
+   Mode = Library.IsMobile and "Toggle" or "Hold",
+   SyncToggleState = Library.IsMobile
+})
+
